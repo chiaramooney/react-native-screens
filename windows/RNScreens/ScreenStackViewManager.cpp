@@ -24,11 +24,6 @@ winrt::FrameworkElement ScreenStackViewManager::CreateView() noexcept {
   return winrt::make<ScreenStack>(m_reactContext);
 }
 
-// IViewManagerRequiresNativeLayout
-bool ScreenStackViewManager::RequiresNativeLayout() {
-  return false;
-}
-
 // IViewManagerWithChildren
 void ScreenStackViewManager::AddView(
     FrameworkElement parent,

@@ -24,11 +24,6 @@ ScreenStackHeaderConfigViewManager::CreateView() noexcept {
   return winrt::make<ScreenStackHeaderConfig>(m_reactContext);
 }
 
-// IViewManagerRequiresNativeLayout
-bool ScreenStackHeaderConfigViewManager::RequiresNativeLayout() {
-  return true;
-}
-
 // IViewManagerWithReactContext
 winrt::IReactContext
 ScreenStackHeaderConfigViewManager::ReactContext() noexcept {

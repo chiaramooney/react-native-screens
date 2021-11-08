@@ -17,6 +17,9 @@ class ScreenContainer
   winrt::Windows::Foundation::Collections::IVector<Windows::UI::Xaml::UIElement>
       m_children;
 
+  winrt::impl::com_ref<Screen> getTopScreen();
+  void updateVisualTree();
+ 
  private:
   winrt::Microsoft::ReactNative::IReactContext m_reactContext{nullptr};
 };

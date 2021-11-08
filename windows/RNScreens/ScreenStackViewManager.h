@@ -9,7 +9,6 @@ class ScreenStackViewManager
     : public winrt::implements<
           ScreenStackViewManager,
           winrt::Microsoft::ReactNative::IViewManager,
-          winrt::Microsoft::ReactNative::IViewManagerRequiresNativeLayout,
           winrt::Microsoft::ReactNative::IViewManagerWithChildren,
           winrt::Microsoft::ReactNative::IViewManagerWithReactContext,
           winrt::Microsoft::ReactNative::IViewManagerWithNativeProperties,
@@ -22,9 +21,6 @@ class ScreenStackViewManager
   // IViewManager
   winrt::hstring Name() noexcept;
   winrt::Windows::UI::Xaml::FrameworkElement CreateView() noexcept;
-
-  // IViewManagerRequiresNativeLayout
-  bool RequiresNativeLayout();
 
   // IViewManagerWithChildren
   void AddView(

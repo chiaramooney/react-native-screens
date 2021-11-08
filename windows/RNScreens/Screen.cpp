@@ -2,6 +2,7 @@
 #include "Screen.h"
 #include "JSValueXaml.h"
 #include "NativeModules.h"
+#include "ScreenContainer.h"
 
 
 namespace winrt {
@@ -119,4 +120,29 @@ void Screen::dispatchOnDisappear() {
         eventDataWriter.WriteObjectEnd();
       });
 }
+
+void Screen::setActivityState(ActivityState state){
+  m_activityState = state;
+}
+
+ActivityState Screen::getActivityState(){
+  return m_activityState;
+}
+
+void Screen::setLastFront(boolean lastFront){
+  m_lastFront = lastFront;
+}
+
+boolean Screen::getLastFront(){
+  return m_lastFront;
+}
+
+void Screen::setScreenContainer(ScreenContainer* screenContainer){
+  m_screenContainer = screenContainer;
+}
+
+ScreenContainer* Screen::getScreenContainer(){
+  return m_screenContainer;
+}
+
 } // namespace winrt::RNScreens::implementation

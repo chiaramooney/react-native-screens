@@ -24,11 +24,6 @@ winrt::FrameworkElement ScreenContainerViewManager::CreateView() noexcept {
   return winrt::make<ScreenContainer>(m_reactContext);
 }
 
-// IViewManagerRequiresNativeLayout
-bool ScreenContainerViewManager::RequiresNativeLayout() {
-  return false;
-}
-
 // IViewManagerWithChildren
 void ScreenContainerViewManager::AddView(
     FrameworkElement parent,

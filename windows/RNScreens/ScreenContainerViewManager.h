@@ -9,7 +9,6 @@ class ScreenContainerViewManager
     : public winrt::implements<
           ScreenContainerViewManager,
           winrt::Microsoft::ReactNative::IViewManager,
-          winrt::Microsoft::ReactNative::IViewManagerRequiresNativeLayout,
           winrt::Microsoft::ReactNative::IViewManagerWithChildren,
           winrt::Microsoft::ReactNative::IViewManagerWithReactContext,
           winrt::Microsoft::ReactNative::IViewManagerWithNativeProperties,

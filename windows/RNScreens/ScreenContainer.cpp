@@ -20,12 +20,13 @@ ScreenContainer::ScreenContainer(
           {winrt::single_threaded_vector<Windows::UI::Xaml::UIElement>()}) {}
 
 void ScreenContainer::addScreen(Screen &screen, int64_t) {
+  screen.setScreenContainer(this);
   auto uiElement = screen.try_as<UIElement>();
   if (!uiElement)
     return;
-
   m_children.Append(uiElement);
   Content(uiElement);
+  updateVisualTree();
 }
 
 void ScreenContainer::removeAllChildren() {
@@ -45,5 +46,34 @@ void ScreenContainer::replaceChild(
     return;
 
   m_children.SetAt(index, newChild);
+}
+
+winrt::impl::com_ref<Screen> ScreenContainer::getTopScreen() {
+  for (int i = 0; i < m_children.Size(); i++) {
+    auto screen = m_children.GetAt(i).try_as<Screen>();
+    if (screen->getActivityState() == ActivityState::ON_TOP) {
+      return screen;
+    }
+  }
+  return nullptr;
+}
+
+void ScreenContainer::updateVisualTree() {
+  auto topScreen = getTopScreen();
+  if (!topScreen) {
+    return;
+  }
+  auto uiElement = topScreen.try_as<UIElement>();
+  if (!uiElement) {
+    return;
+  }
+  Content(uiElement);
+  for (int i=0; i < m_children.Size(); i++) {
+    auto screen = m_children.GetAt(i).try_as<Screen>();
+    if (screen->getActivityState() == ActivityState::INACTIVE){
+      this->removeChildAt(i);
+      i--;
+    }
+  }
 }
 } // namespace winrt::RNScreens::implementation

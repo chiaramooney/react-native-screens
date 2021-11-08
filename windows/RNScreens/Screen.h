@@ -2,6 +2,7 @@
 
 namespace winrt::RNScreens::implementation {
 
+class ScreenContainer;
 enum class StackPresentation { PUSH, MODAL, TRANSPARENT_MODAL };
 
 enum class StackAnimation {
@@ -58,7 +59,19 @@ class Screen : public winrt::Windows::UI::Xaml::Controls::StackPanelT<Screen> {
   void dispatchOnWillAppear();
   void dispatchOnWillDisappear();
 
+  void setActivityState(ActivityState state);
+  ActivityState getActivityState();
+
+  void setLastFront(boolean lastFront);
+  boolean getLastFront();
+
+  void setScreenContainer(ScreenContainer* screenContainer);
+  ScreenContainer* getScreenContainer();
+
  private:
   winrt::Microsoft::ReactNative::IReactContext m_reactContext{nullptr};
+  ActivityState m_activityState;
+  boolean m_lastFront = false;
+  ScreenContainer* m_screenContainer{nullptr};
 };
 } // namespace winrt::RNScreens::implementation

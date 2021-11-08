@@ -8,7 +8,6 @@ class ScreenStackHeaderConfigViewManager
     : public winrt::implements<
           ScreenStackHeaderConfigViewManager,
           winrt::Microsoft::ReactNative::IViewManager,
-          winrt::Microsoft::ReactNative::IViewManagerRequiresNativeLayout,
           winrt::Microsoft::ReactNative::IViewManagerWithReactContext,
           winrt::Microsoft::ReactNative::IViewManagerWithNativeProperties,
           winrt::Microsoft::ReactNative::
@@ -20,9 +19,6 @@ class ScreenStackHeaderConfigViewManager
   // IViewManager
   winrt::hstring Name() noexcept;
   winrt::Windows::UI::Xaml::FrameworkElement CreateView() noexcept;
-
-  // IViewManagerRequiresNativeLayout
-  bool RequiresNativeLayout();
 
   // IViewManagerWithReactContext
   winrt::Microsoft::ReactNative::IReactContext ReactContext() noexcept;

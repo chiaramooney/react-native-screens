@@ -3,6 +3,7 @@
 #include "JSValueXaml.h"
 #include "NativeModules.h"
 #include "Screen.h"
+#include "ScreenContainer.h"
 
 namespace winrt {
 using namespace Microsoft::ReactNative;
@@ -21,11 +22,6 @@ winrt::hstring ScreenViewManager::Name() noexcept {
 
 winrt::FrameworkElement ScreenViewManager::CreateView() noexcept {
   return winrt::make<winrt::RNScreens::implementation::Screen>(m_reactContext);
-}
-
-// IViewManagerRequiresNativeLayout
-bool ScreenViewManager::RequiresNativeLayout() {
-  return false;
 }
 
 // IViewManagerWithChildren
@@ -92,6 +88,7 @@ ScreenViewManager::NativeProps() noexcept {
   nativeProps.Insert(L"statusBarStyle", ViewManagerPropertyType::String);
   nativeProps.Insert(L"statusBarTranslucent", ViewManagerPropertyType::Boolean);
   nativeProps.Insert(L"statusBarHidden", ViewManagerPropertyType::Boolean);
+  nativeProps.Insert(L"activityState", ViewManagerPropertyType::Number);
   return nativeProps.GetView();
 }
 
@@ -112,6 +109,30 @@ void ScreenViewManager::UpdateProperties(
         auto const &value = propertyValue.AsString();
         // TODO: Implement this for Windows
         (void)value;
+      }else if (propertyName == "activityState"){
+        auto const &value = propertyValue.AsInt16();
+        auto screen = view.try_as<Screen>();
+        auto parent = view.Parent(); // null
+        if (!screen)
+          return;
+        switch (value) {
+          case 0: {
+            screen->setActivityState(ActivityState::INACTIVE);
+            break;
+          }
+          case 1: {
+            screen->setActivityState(ActivityState::TRANSITIONING_OR_BELOW_TOP);
+            break;
+          }
+          case 2: {
+            screen->setActivityState(ActivityState::ON_TOP);
+            break;
+          }
+          default: {
+            OutputDebugStringA("Unknown ActivityState in ScreenViewManager\n");
+            return;
+          }
+        }
       } else {
         OutputDebugStringA("Unknown property in ScreenViewManager\n");
       }
