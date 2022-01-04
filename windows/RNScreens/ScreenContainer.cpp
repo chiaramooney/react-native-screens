@@ -35,7 +35,9 @@ void ScreenContainer::removeAllChildren() {
 }
 
 void ScreenContainer::removeChildAt(int64_t index) {
+  auto screen = m_children.GetAt(index).try_as<Screen>();
   m_children.RemoveAt(static_cast<uint32_t>(index));
+  //screen.onUnloaded();
 }
 
 void ScreenContainer::replaceChild(

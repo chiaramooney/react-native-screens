@@ -76,9 +76,10 @@ void Screen::onUnloaded(
   auto screen = sender.try_as<Screen>();
   if (!screen)
     return;
-
+  screen->removeAllChildren();
   screen->dispatchOnWillDisappear();
   screen->dispatchOnDisappear();
+  m_reactContext = nullptr;
 }
 
 void Screen::dispatchOnWillAppear() {
