@@ -10,9 +10,8 @@ import {
   View,
   ViewProps,
 } from 'react-native';
-// @ts-ignore Getting private component
-// eslint-disable-next-line import/default
-import processColor from 'react-native/Libraries/StyleSheet/processColor';
+import { Freeze } from 'react-freeze';
+import { version } from 'react-native/package.json';
 
 import TransitionProgressContext from './TransitionProgressContext';
 import useTransitionProgress from './useTransitionProgress';
@@ -29,6 +28,10 @@ import {
   ScreenStackHeaderConfigProps,
   SearchBarProps,
 } from './types';
+import {
+  isSearchBarAvailableForCurrentPlatform,
+  executeNativeBackPress,
+} from './utils';
 
 // web implementation is taken from `index.tsx`
 const isPlatformSupported =
@@ -45,6 +48,21 @@ function enableScreens(shouldEnableScreens = true): void {
       `Screen native module hasn't been linked. Please check the react-native-screens README for more details`
     );
   }
+}
+
+let ENABLE_FREEZE = false;
+
+function enableFreeze(shouldEnableReactFreeze = true): void {
+  const minor = parseInt(version.split('.')[1]); // eg. takes 66 from '0.66.0'
+
+  // react-freeze requires react-native >=0.64, react-native from main is 0.0.0
+  if (!(minor === 0 || minor >= 64) && shouldEnableReactFreeze) {
+    console.warn(
+      'react-freeze library requires at least react-native 0.64. Please upgrade your react-native version in order to use this feature.'
+    );
+  }
+
+  ENABLE_FREEZE = shouldEnableReactFreeze;
 }
 
 // const that tells if the library should use new implementation, will be undefined for older versions
@@ -123,7 +141,65 @@ const ScreensNativeModules = {
   },
 };
 
-class Screen extends React.Component<ScreenProps> {
+interface FreezeWrapperProps {
+  freeze: boolean;
+  children: React.ReactNode;
+}
+
+// This component allows one more render before freezing the screen.
+// Allows activityState to reach the native side and useIsFocused to work correctly.
+function DelayedFreeze({ freeze, children }: FreezeWrapperProps) {
+  // flag used for determining whether freeze should be enabled
+  const [freezeState, setFreezeState] = React.useState(false);
+
+  if (freeze !== freezeState) {
+    // setImmediate is executed at the end of the JS execution block.
+    // Used here for changing the state right after the render.
+    setImmediate(() => {
+      setFreezeState(freeze);
+    });
+  }
+
+  return <Freeze freeze={freeze ? freezeState : false}>{children}</Freeze>;
+}
+
+function ScreenStack(props: ScreenStackProps) {
+  const { children, ...rest } = props;
+  const size = React.Children.count(children);
+  // freezes all screens except the top one
+  const childrenWithFreeze = React.Children.map(children, (child, index) => {
+    // @ts-expect-error it's either SceneView in v6 or RouteView in v5
+    const { props, key } = child;
+    const descriptor = props?.descriptor ?? props?.descriptors?.[key];
+    const freezeEnabled = descriptor?.options?.freezeOnBlur ?? ENABLE_FREEZE;
+
+    return (
+      <DelayedFreeze freeze={freezeEnabled && size - index > 1}>
+        {child}
+      </DelayedFreeze>
+    );
+  });
+
+  return (
+    <ScreensNativeModules.NativeScreenStack {...rest}>
+      {childrenWithFreeze}
+    </ScreensNativeModules.NativeScreenStack>
+  );
+}
+
+// Incomplete type, all accessible properties available at:
+// react-native/Libraries/Components/View/ReactNativeViewViewConfig.js
+interface ViewConfig extends View {
+  viewConfig: {
+    validAttributes: {
+      style: {
+        display: boolean;
+      };
+    };
+  };
+}
+
+class InnerScreen extends React.Component<ScreenProps> {
   private ref: React.ElementRef<typeof View> | null = null;
   private closing = new Animated.Value(0);
   private progress = new Animated.Value(0);
@@ -139,7 +215,11 @@ class Screen extends React.Component<ScreenProps> {
   };
 
   render() {
-    const { enabled = ENABLE_SCREENS, ...rest } = this.props;
+    const {
+      enabled = ENABLE_SCREENS,
+      freezeOnBlur = ENABLE_FREEZE,
+      ...rest
+    } = this.props;
 
     if (enabled && isPlatformSupported) {
       AnimatedNativeScreen =
@@ -154,7 +234,7 @@ class Screen extends React.Component<ScreenProps> {
         activityState,
         children,
         isNativeStack,
-        statusBarColor,
+        gestureResponseDistance,
         ...props
       } = rest;
 
@@ -165,43 +245,60 @@ class Screen extends React.Component<ScreenProps> {
         activityState = active !== 0 ? 2 : 0; // in the new version, we need one of the screens to have value of 2 after the transition
       }
 
-      const processedColor = processColor(statusBarColor);
+      const handleRef = (ref: ViewConfig) => {
+        if (ref?.viewConfig?.validAttributes?.style) {
+          ref.viewConfig.validAttributes.style = {
+            ...ref.viewConfig.validAttributes.style,
+            display: false,
+          };
+          this.setRef(ref);
+        }
+      };
 
       return (
-        <AnimatedNativeScreen
-          {...props}
-          statusBarColor={processedColor}
-          activityState={activityState}
-          ref={this.setRef}
-          onTransitionProgress={
-            !isNativeStack
-              ? undefined
-              : Animated.event(
-                  [
-                    {
-                      nativeEvent: {
-                        progress: this.progress,
-                        closing: this.closing,
-                        goingForward: this.goingForward,
+        <DelayedFreeze freeze={freezeOnBlur && activityState === 0}>
+          <AnimatedNativeScreen
+            {...props}
+            activityState={activityState}
+            gestureResponseDistance={{
+              start: gestureResponseDistance?.start ?? -1,
+              end: gestureResponseDistance?.end ?? -1,
+              top: gestureResponseDistance?.top ?? -1,
+              bottom: gestureResponseDistance?.bottom ?? -1,
+            }}
+            // This prevents showing blank screen when navigating between multiple screens with freezing
+            // https://github.com/software-mansion/react-native-screens/pull/1208
+            ref={handleRef}
+            onTransitionProgress={
+              !isNativeStack
+                ? undefined
+                : Animated.event(
+                    [
+                      {
+                        nativeEvent: {
+                          progress: this.progress,
+                          closing: this.closing,
+                          goingForward: this.goingForward,
+                        },
                       },
-                    },
-                  ],
-                  { useNativeDriver: true }
-                )
-          }>
-          {!isNativeStack ? ( // see comment of this prop in types.tsx for information why it is needed
-            children
-          ) : (
-            <TransitionProgressContext.Provider
-              value={{
-                progress: this.progress,
-                closing: this.closing,
-                goingForward: this.goingForward,
-              }}>
-              {children}
-            </TransitionProgressContext.Provider>
-          )}
-        </AnimatedNativeScreen>
+                    ],
+                    { useNativeDriver: true }
+                  )
+            }>
+            {!isNativeStack ? ( // see comment of this prop in types.tsx for information why it is needed
+              children
+            ) : (
+              <TransitionProgressContext.Provider
+                value={{
+                  progress: this.progress,
+                  closing: this.closing,
+                  goingForward: this.goingForward,
+                }}>
+                {children}
+              </TransitionProgressContext.Provider>
+            )}
+          </AnimatedNativeScreen>
+        </DelayedFreeze>
       );
     } else {
       // same reason as above
@@ -314,8 +411,17 @@ export type {
 };
 
 // context to be used when the user wants to use enhanced implementation
-// e.g. to use `react-native-reanimated` (see `reanimated` folder in repo)
-const ScreenContext = React.createContext(Screen);
+// e.g. to use `useReanimatedTransitionProgress` (see `reanimated` folder in repo)
+const ScreenContext = React.createContext(InnerScreen);
+
+class Screen extends React.Component<ScreenProps> {
+  static contextType = ScreenContext;
+
+  render() {
+    const ScreenWrapper = this.context || InnerScreen;
+    return <ScreenWrapper {...this.props} />;
+  }
+}
 
 module.exports = {
   // these are classes so they are not evaluated until used
@@ -323,6 +429,8 @@ module.exports = {
   Screen,
   ScreenContainer,
   ScreenContext,
+  ScreenStack,
+  InnerScreen,
 
   get NativeScreen() {
     return ScreensNativeModules.NativeScreen;
@@ -336,9 +444,6 @@ module.exports = {
     return ScreensNativeModules.NativeScreenNavigationContainer;
   },
 
-  get ScreenStack() {
-    return ScreensNativeModules.NativeScreenStack;
-  },
   get ScreenStackHeaderConfig() {
     return ScreensNativeModules.NativeScreenStackHeaderConfig;
   },
@@ -346,8 +451,10 @@ module.exports = {
     return ScreensNativeModules.NativeScreenStackHeaderSubview;
   },
   get SearchBar() {
-    if (Platform.OS !== 'ios') {
-      console.warn('Importing SearchBar is only valid on iOS devices.');
+    if (!isSearchBarAvailableForCurrentPlatform) {
+      console.warn(
+        'Importing SearchBar is only valid on iOS and Android devices.'
+      );
       return View;
     }
 
@@ -370,7 +477,11 @@ module.exports = {
   ScreenStackHeaderSearchBarView,
 
   enableScreens,
+  enableFreeze,
   screensEnabled,
   shouldUseActivityState,
   useTransitionProgress,
+
+  isSearchBarAvailableForCurrentPlatform,
+  executeNativeBackPress,
 };

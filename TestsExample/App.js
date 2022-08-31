@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React from 'react';
 
-import {ReanimatedScreenProvider} from 'react-native-screens/reanimated';
+import {enableFreeze} from 'react-native-screens';
 
 import Test42 from './src/Test42';
 import Test111 from './src/Test111';
@@ -33,7 +33,6 @@ import Test748 from './src/Test748';
 import Test750 from './src/Test750';
 import Test758 from './src/Test758';
 import Test761 from './src/Test761';
-import Test765 from './src/Test765';
 import Test779 from './src/Test779';
 import Test780 from './src/Test780';
 import Test791 from './src/Test791';
@@ -59,11 +58,33 @@ import Test1072 from './src/Test1072';
 import Test1084 from './src/Test1084';
 import Test1091 from './src/Test1091';
 import Test1096 from './src/Test1096';
+import Test1153 from './src/Test1153';
+import Test1157 from './src/Test1157';
+import Test1162 from './src/Test1162';
+import Test1166 from './src/Test1166';
+import Test1188 from './src/Test1188';
+import Test1190 from './src/Test1190';
+import TestFreeze from './src/TestFreeze';
+import Test1198 from './src/Test1198';
+import Test1204 from './src/Test1204';
+import Test1209 from './src/Test1209';
+import Test1213 from './src/Test1213';
+import Test1214 from './src/Test1214';
+import Test1227 from './src/Test1227';
+import Test1228 from './src/Test1228';
+import Test1259 from './src/Test1259';
+import Test1260 from './src/Test1260';
+import Test1296 from './src/Test1296';
+import Test1299 from './src/Test1299';
+import Test1391 from './src/Test1391';
+import Test1419 from './src/Test1419';
+import Test1473 from './src/Test1473';
+import Test1476 from './src/Test1476';
+import Test1509 from './src/Test1509';
+import Test1539 from './src/Test1539';
+
+enableFreeze(true);
 
 export default function App() {
-  return (
-    <ReanimatedScreenProvider>
-      <Test42 />
-    </ReanimatedScreenProvider>
-  );
+  return <Test42 />;
 }

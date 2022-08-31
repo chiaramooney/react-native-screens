@@ -29,7 +29,7 @@ export default function App(): JSX.Element {
 }
 
 function First({navigation}: NativeStackScreenProps<ParamListBase>) {
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     navigation.setOptions({
       searchBar: searchBarOptions,
     });
@@ -39,6 +39,7 @@ function First({navigation}: NativeStackScreenProps<ParamListBase>) {
 
   const searchBarOptions: SearchBarProps = {
     barTintColor: 'powderblue',
+    tintColor: 'red',
     textColor: 'red',
     hideWhenScrolling: true,
     obscureBackground: false,

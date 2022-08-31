@@ -11,6 +11,10 @@ import {
 
 export * from './types';
 export { default as useTransitionProgress } from './useTransitionProgress';
+export {
+  isSearchBarAvailableForCurrentPlatform,
+  executeNativeBackPress,
+} from './utils';
 
 let ENABLE_SCREENS = true;
 
@@ -20,6 +24,12 @@ export function enableScreens(shouldEnableScreens = true): void {
 
 export function screensEnabled(): boolean {
   return ENABLE_SCREENS;
+}
+
+// @ts-ignore function stub, freezing logic is located in index.native.tsx
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function enableFreeze(shouldEnableReactFreeze = true): void {
+  // noop
 }
 
 export class NativeScreen extends React.Component<ScreenProps> {
@@ -51,6 +61,8 @@ export class NativeScreen extends React.Component<ScreenProps> {
 }
 
 export const Screen = Animated.createAnimatedComponent(NativeScreen);
+
+export const InnerScreen = View;
 
 export const ScreenContext = React.createContext(Screen);
 

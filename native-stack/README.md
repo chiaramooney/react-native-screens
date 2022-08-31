@@ -87,6 +87,19 @@ Boolean indicating whether the swipe gesture should work on whole screen. Swipin
 
 Whether you can use gestures to dismiss this screen. Defaults to `true`.
 
+#### `gestureResponseDistance` (iOS only)
+
+Use it to restrict the distance from the edges of screen in which the gesture should be recognized. To be used alongside `fullScreenSwipeEnabled`. The responsive area is covered with 4 values: `start`, `end`, `top`, `bottom`. Example usage: 
+
+```tsx
+gestureResponseDistance: {
+  start: 200,
+  end: 250,
+  top: 100,
+  bottom: 150,
+}
+```
+
 #### `headerBackTitle`
 
 Title string used by the back button on iOS. Defaults to the previous scene's `headerTitle`.
@@ -182,12 +195,28 @@ A Boolean to that lets you opt out of insetting the header. You may want to * se
 
 Boolean indicating whether the navigation bar is translucent.
 
+####  `hideKeyboardOnSwipe` (iOS only)
+
+Whether the keyboard should hide when swiping to the previous screen. Defaults to `false`.
+
+#### `homeIndicatorHidden` (iOS only)
+
+Whether the home indicator should be hidden on this screen. Defaults to `false`.
+
 #### `nativeBackButtonDismissalEnabled` (Android only)
 
 Boolean indicating whether, when the Android default back button is clicked, the `pop` action should be performed on the native side or on the JS side to be able to prevent it.
 Unfortunately the same behavior is not available on iOS since the behavior of native back button cannot be changed there.
 
 Defaults to `false`.
+
+#### `navigationBarColor` (Android only)
+
+Sets the navigation bar color. Defaults to initial status bar color.
+
+#### `navigationBarHidden` (Android only)
+
+Sets the visibility of the navigation bar. Defaults to `false`.
 
 #### `replaceAnimation`
 
@@ -230,9 +259,29 @@ Defaults to `push`.
 
 Using `containedModal` and `containedTransparentModal` with other types of modals in one native stack navigator is not recommended and can result in a freeze or a crash of the application.
 
+#### `swipeDirection` (iOS only)
+
+Sets the direction in which you should swipe to dismiss the screen. The following values are supported:
+- `vertical` – dismiss screen vertically
+- `horizontal` – dismiss screen horizontally (default)
+
+When using `vertical` option, options `fullScreenSwipeEnabled: true`, `customAnimationOnSwipe: true` and `stackAnimation: 'slide_from_bottom'` are set by default.
+
 #### `title`
 
 A string that can be used as a fallback for `headerTitle`.
+
+#### `transitionDuration` (iOS only)
+
+Changes the duration (in milliseconds) of `slide_from_bottom`, `fade_from_bottom`, `fade` and `simple_push` transitions on iOS. Defaults to `350`.
+
+The duration of `default` and `flip` transitions isn't customizable.
+
+### freezeOnBlur
+
+Whether inactive screens should be suspended from re-rendering.
+
+Defaults to `false`. When `enableFreeze()` is run at the top of the application defaults to `true`.
 
 #### `useTransitionProgress`
 
@@ -353,16 +402,14 @@ Defaults to `auto`.
 
 Sets the translucency of the status bar (similar to the `StatusBar` component). Defaults to `false`.
 
-### Search bar (iOS only)
+### Search bar
 
 The search bar is just a `searchBar` property that can be specified in the navigator's `screenOptions` or an individual screen's `options`. Search bars are rarely static so normally it is controlled by passing an object to `searchBar` navigation option in the component's body.
-
-Search bar is only supported on iOS.
 
 Example: 
 
 ```js
-React.useEffect(() => {
+React.useLayoutEffect(() => {
   navigation.setOptions({
     searchBar: {
       // search bar options
@@ -370,6 +417,8 @@ React.useEffect(() => {
   });
 }, [navigation]);
 ```
+
+We advise using `useLayoutEffect` hook instead of `useEffect` when managing `searchBar` props to avoid unexpected layout issues.
 
 Supported properties are described below.
 
@@ -383,7 +432,11 @@ Possible values:
 - `sentences`
 - `characters`
 
-Defaults to `sentences`.
+Defaults to `sentences` on iOS and `'none'` on Android.
+
+#### `autoFocus` (Android only)
+
+When set to `true` focuses search bar automatically when screen is appearing. Default value is `false`.
 
 #### `barTintColor`
 
@@ -391,23 +444,41 @@ The search field background color.
 
 By default bar tint color is translucent.
 
-#### `cancelButtonText`
+#### `tintColor` (iOS only)
+
+The color for the cursor caret and cancel button text.
+
+#### `cancelButtonText` (iOS only)
 
 The text to be used instead of default `Cancel` button text.
 
-#### `hideNavigationBar`
+#### `disableBackButtonOverride` (Android only)
+
+Default behavior is to prevent screen from going back when search bar is open (`disableBackButtonOverride: false`). If you don't want this to happen set `disableBackButtonOverride` to `true` 
+
+#### `hideNavigationBar` (iOS only)
 
 Boolean indicating whether to hide the navigation bar during searching.
 
 Defaults to `true`.
 
-#### `hideWhenScrolling`
+#### `hideWhenScrolling` (iOS only)
 
 Boolean indicating whether to hide the search bar when scrolling.
 
 Defaults to `true`.
 
-####  `obscureBackground`
+#### `inputType` (Android only)
+
+This prop is used to change type of the input and keyboard. Default value is `'text'`.
+
+All values:
+- `'text'` - normal text input
+- `'number'` - number input
+- `'email'` - email input
+- `'phone'` - phone input
+
+####  `obscureBackground` (iOS only)
 
 Boolean indicating whether to obscure the underlying content with semi-transparent overlay.
 
@@ -430,7 +501,7 @@ Example:
 ```js
 const [search, setSearch] = React.useState('');
 
-React.useEffect(() => {
+React.useLayoutEffect(() => {
   navigation.setOptions({
     searchBar: {
       onChangeText: (event) => setSearch(event.nativeEvent.text),
@@ -438,10 +509,18 @@ React.useEffect(() => {
   });
 }, [navigation]);
 ```
+#### `onClose` (Android only)
+
+A callback that gets called when search bar is closing
+
 
 #### `onFocus`
 
 A callback that gets called when search bar has received focus.
+
+#### `onOpen` (Android only)
+
+A callback that gets called when search bar is expanding
 
 #### `onSearchButtonPress`
 
@@ -456,6 +535,18 @@ Defaults to an empty string.
 #### `textColor`
 
 The search field text color.
+
+#### `hintTextColor`
+
+The search hint text color. (Android only)
+
+#### `headerIconColor`
+
+The search and close icon color shown in the header. (Android only)
+
+#### `shouldShowHintSearchIcon`
+
+Show the search hint icon when search bar is focused. (Android only)
 
 ### Events
 

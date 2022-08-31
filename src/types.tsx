@@ -47,6 +47,7 @@ export type BlurEffectTypes =
   | 'systemThickMaterialDark'
   | 'systemChromeMaterialDark';
 export type ScreenReplaceTypes = 'push' | 'pop';
+export type SwipeDirectionTypes = 'vertical' | 'horizontal';
 export type ScreenOrientationTypes =
   | 'default'
   | 'all'
@@ -67,6 +68,13 @@ export type TransitionProgressEventType = {
   progress: number;
   closing: number;
   goingForward: number;
+};
+
+export type GestureResponseDistanceType = {
+  start?: number;
+  end?: number;
+  top?: number;
+  bottom?: number;
 };
 
 export interface ScreenProps extends ViewProps {
@@ -102,6 +110,24 @@ export interface ScreenProps extends ViewProps {
    */
   gestureEnabled?: boolean;
   /**
+   * Use it to restrict the distance from the edges of screen in which the gesture should be recognized. To be used alongside `fullScreenSwipeEnabled`.
+   *
+   * @platform ios
+   */
+  gestureResponseDistance?: GestureResponseDistanceType;
+  /**
+   * Whether the home indicator should be hidden on this screen. Defaults to `false`.
+   *
+   * @platform ios
+   */
+  homeIndicatorHidden?: boolean;
+  /**
+   * Whether the keyboard should hide when swiping to the previous screen. Defaults to `false`.
+   *
+   * @platform ios
+   */
+  hideKeyboardOnSwipe?: boolean;
+  /**
    * Boolean indicating whether, when the Android default back button is clicked, the `pop` action should be performed on the native side or on the JS side to be able to prevent it.
    * Unfortunately the same behavior is not available on iOS since the behavior of native back button cannot be changed there.
    * Defaults to `false`.
@@ -109,6 +135,18 @@ export interface ScreenProps extends ViewProps {
    * @platform android
    */
   nativeBackButtonDismissalEnabled?: boolean;
+  /**
+   * Sets the navigation bar color. Defaults to initial status bar color.
+   *
+   * @platform android
+   */
+  navigationBarColor?: string;
+  /**
+   * Sets the visibility of the navigation bar. Defaults to `false`.
+   *
+   * @platform android
+   */
+  navigationBarHidden?: boolean;
   /**
    * A callback that gets called when the current screen appears.
    */
@@ -214,6 +252,28 @@ export interface ScreenProps extends ViewProps {
    * @platform android
    */
   statusBarTranslucent?: boolean;
+  /**
+   * Sets the direction in which you should swipe to dismiss the screen.
+   * When using `vertical` option, options `fullScreenSwipeEnabled: true`, `customAnimationOnSwipe: true` and `stackAnimation: 'slide_from_bottom'` are set by default.
+   * The following values are supported:
+   * - `vertical` – dismiss screen vertically
+   * - `horizontal` – dismiss screen horizontally (default)
+   *
+   * @platform ios
+   */
+  swipeDirection?: SwipeDirectionTypes;
+  /**
+   * Changes the duration (in milliseconds) of `slide_from_bottom`, `fade_from_bottom`, `fade` and `simple_push` transitions on iOS. Defaults to `350`.
+   * The duration of `default` and `flip` transitions isn't customizable.
+   *
+   * @platform ios
+   */
+  transitionDuration?: number;
+  /**
+   * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
+   * When `enableFreeze()` is run at the top of the application defaults to `true`.
+   */
+  freezeOnBlur?: boolean;
 }
 
 export interface ScreenContainerProps extends ViewProps {
@@ -332,6 +392,14 @@ export interface ScreenStackHeaderConfigProps extends ViewProps {
    */
   largeTitleHideShadow?: boolean;
   /**
+   * Callback which is executed when screen header is attached
+   */
+  onAttached?: () => void;
+  /**
+   * Callback which is executed when screen header is detached
+   */
+  onDetached?: () => void;
+  /**
    * String that can be displayed in the header as a fallback for `headerTitle`.
    */
   title?: string;
@@ -372,23 +440,52 @@ export interface SearchBarProps {
    */
   autoCapitalize?: 'none' | 'words' | 'sentences' | 'characters';
   /**
+   * Automatically focuses search bar on mount
+   *
+   * @platform android
+   */
+  autoFocus?: boolean;
+  /**
    * The search field background color
    */
   barTintColor?: string;
   /**
+   * The color for the cursor caret and cancel button text.
+   *
+   * @platform ios
+   */
+  tintColor?: string;
+  /**
    * The text to be used instead of default `Cancel` button text
+   *
+   * @platform ios
    */
   cancelButtonText?: string;
-
+  /**
+   * Specifies whether the back button should close search bar's text input or not.
+   *
+   * @platform android
+   */
+  disableBackButtonOverride?: boolean;
   /**
    * Indicates whether to hide the navigation bar
+   *
+   * @platform ios
    */
   hideNavigationBar?: boolean;
   /**
    * Indicates whether to hide the search bar when scrolling
+   *
+   * @platform ios
    */
   hideWhenScrolling?: boolean;
 
+  /**
+   * Sets type of the input. Defaults to `text`.
+   *
+   * @platform android
+   */
+  inputType?: 'text' | 'phone' | 'number' | 'email';
   /**
    * Indicates whether to to obscure the underlying content
    */
@@ -399,6 +496,8 @@ export interface SearchBarProps {
   onBlur?: (e: NativeSyntheticEvent<TargetedEvent>) => void;
   /**
    * A callback that gets called when the cancel button is pressed
+   *
+   * @platform ios
    */
   onCancelButtonPress?: (e: NativeSyntheticEvent<TargetedEvent>) => void;
 
@@ -408,9 +507,21 @@ export interface SearchBarProps {
   onChangeText?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
 
   /**
+   * A callback that gets called when search bar is closed
+   *
+   * @platform android
+   */
+  onClose?: () => void;
+  /**
    * A callback that gets called when search bar has received focus
    */
   onFocus?: (e: NativeSyntheticEvent<TargetedEvent>) => void;
+  /**
+   * A callback that gets called when search bar is opened
+   *
+   * @platform android
+   */
+  onOpen?: () => void;
   /**
    * A callback that gets called when the search button is pressed. It receives the current text value of the search bar.
    */
@@ -425,4 +536,23 @@ export interface SearchBarProps {
    * The search field text color
    */
   textColor?: string;
+  /**
+   * The search hint text color
+   *
+   * @plaform android
+   */
+  hintTextColor?: string;
+  /**
+   * The search and close icon color shown in the header
+   *
+   * @plaform android
+   */
+  headerIconColor?: string;
+  /**
+   * Show the search hint icon when search bar is focused
+   *
+   * @plaform android
+   * @default true
+   */
+  shouldShowHintSearchIcon?: boolean;
 }
